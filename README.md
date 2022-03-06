@@ -1,6 +1,6 @@
-# SQL ETF Analyzer
+# Crypto Portfolio - Machine Learning
 ## Introduction
-An application designed to analyze a hypothethical FinTech ETF using SQL and database queries. This analysis involves the overall returns of both the entire ETF as well as each individual asset.
+An application designed to apply machine learning (Unsupervised Learning) to historical data on cryptocurrencies to gather cluster data and form a cryptocurrency portfolio.
 
 ---
 
@@ -19,7 +19,11 @@ The following technology/software was used for this application:
     
     -from pathlib import Path
     
-    -import sqlalchemy as sql
+    -from sklearn.cluster import KMeans
+    
+    -from sklearn.decomposition import PCA
+    
+    -from sklearn.preprocessing import StandardScaler
     
 -JupyterLab
 
@@ -27,70 +31,58 @@ The following technology/software was used for this application:
 
 -Windows 10 Operating System
 
--Voila
-
 ---
 
 ## Installation Guide
 
-To install this application on your machine, download (or clone using http link) all files contained in this repository davidlp94/07_DLP_SQL_ETF_Analyzer.
+To install this application on your machine, download (or clone using http link) all files contained in this repository davidlp94/10_DLP_Machine_Learning_Crypto.
 
-Next, open GitBash (terminal for MacOS), change your directory to the davidlp94/07_DLP_SQL_ETF_Analyzer, open JupyterLab in a dev environment and open/run the etf_analyzer.ipynb file.
+Next, open GitBash (terminal for MacOS), change your directory to the davidlp94/10_DLP_Machine_Learning_Crypto, open JupyterLab in a dev environment and open/run the crypto_investments.ipynb file.
 
 ---
 
 ## Main Source Code
 (Please refer to Jupyter Notebook for full source-code)
-## Analyze the ETF Portfolio
+## Prepare the Data
 
-The first step in this application is to establish a database connection string and query the ETF assets into a DataBase using SQL for further analysis.
-
-```
-import numpy as np
-import pandas as pd
-import hvplot.pandas
-import sqlalchemy as sql
-from pathlib import Path
-
-database_connection_string = 'sqlite:///etf.db'
-engine = sql.create_engine(database_connection_string)
-
-query = """
-SELECT GDOT.time, GDOT.daily_returns, GS.daily_returns, PYPL.daily_returns, SQ.daily_returns
-FROM GDOT
-INNER JOIN GS
-ON GDOT.time = GS.time
-INNER JOIN PYPL
-ON GS.time = PYPL.time
-INNER JOIN SQ
-ON PYPL.time = SQ.time
-"""
-
-etf_portfolio = pd.read_sql_query(query, con=engine)
-
-etf_portfolio.columns = ["time", "GDOT_daily_returns", "GS_daily_returns", "PYPL_Daily_returns", "SQ_daily_returns"]
-display(etf_portfolio)
-```
-
-![image](https://user-images.githubusercontent.com/96163075/154754794-bca18ea1-ea8e-4697-a609-d8b7aff39cae.png)
+The first step in this application is to prepare the data by applying the StandardScaler module to the data to have scaled and uniform data to run K-means algorithm.
 
 ```
-etf_portfolio_returns = etf_portfolio.mean(axis=0)
-annualized_etf_portfolio_returns = (etf_portfolio_returns.mean() +1)**252
-etf_cumulative_returns = (1+etf_portfolio_returns.mean())**(252*4)
+scaled_data = StandardScaler().fit_transform(df_market_data)
 
-etf_portfolio[["GDOT_cum_return", "GS_cum_return", "PYPL_cum_return", "SQ_cum_return"]] = (etf_portfolio.iloc[:, 1:5]+1).cumprod()
-etf_portfolio.hvplot(x="time", y=["GDOT_cum_return", "GS_cum_return", "PYPL_cum_return", "SQ_cum_return"], ylabel="Cumulative Return", \
-                    title="Cumulative Return of Assets in the ETF")
-                    
-etf_portfolio["ETF_cum_return"] = etf_portfolio.iloc[:, 5:9].mean(axis=1)
-etf_portfolio.hvplot(x="time", y="ETF_cum_return", ylabel="Cumulative Return", title="Cumulative Return of Entire ETF")                    
+df_market_data_scaled = pd.DataFrame(
+    scaled_data,
+    columns=df_market_data.columns
+)
+
+df_market_data_scaled["coin_id"] = df_market_data.index
+df_market_data_scaled = df_market_data_scaled.set_index("coin_id")
 ```
 
-![image](https://user-images.githubusercontent.com/96163075/154754978-6431ec47-5dcf-4bf4-84d1-d943bb3ce0ab.png)
-![image](https://user-images.githubusercontent.com/96163075/154754997-1d75434d-2935-4243-9681-147a060c8459.png)
+Next, to find the best value for k, we use the elbow method.
 
-The above generated plots show the cumulative returns on each ETF asset as well as the entire equally weighted ETF portfolio.
+```
+k = list(range(1, 11))
+
+inertia = []
+
+for i in k:
+    model = KMeans(n_clusters=i, random_state=0)
+    model.fit(df_market_data_scaled)
+    inertia.append(model.inertia_)
+
+elbow_data = {
+    "k": k,
+    "inertia": inertia
+}
+
+elbow_curve_standard = elbow_df.hvplot.line(x="k", y="inertia", title="Elbow Curve", xticks=k)
+```
+![image](https://user-images.githubusercontent.com/96163075/156944943-ddeb80b5-a10b-4ffa-8d9f-e2a05d536fab.png)
+
+Based on the above plot, the best value for k=4.
+
+Finally,
 
 ---
 

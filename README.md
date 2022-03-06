@@ -82,7 +82,21 @@ elbow_curve_standard = elbow_df.hvplot.line(x="k", y="inertia", title="Elbow Cur
 
 Based on the above plot, the best value for k=4.
 
-Finally,
+Finally, using our value of k=4, we can run the K-means algorithm to find clusters of cryptocurrencies for our portfolio.
+
+```
+model = KMeans(n_clusters=4)
+model.fit(df_market_data_scaled)
+crypto_segments_df = model.predict(df_market_data_scaled)
+
+crypto_predictions_df = df_market_data_scaled.copy()
+crypto_predictions_df["Crypto_Segment"] = crypto_segments_df
+
+crypto_clusters = crypto_predictions_df.hvplot.scatter(x="price_change_percentage_24h", y="price_change_percentage_7d", by="Crypto_Segment", hover_cols="coin_id", title="Crypto Currency Clusters")
+```
+![image](https://user-images.githubusercontent.com/96163075/156945098-25019baf-aa9d-4665-a16b-01cc5b15e54c.png)
+
+Running the KMeans algorithm and the above code generates a plot with clustered data for further analysis. To obtain a mre defined cluster, we can use the PCA method as well. Please refer to the main source code/Jupyter Notebook for code on how to use PCA method.
 
 ---
 

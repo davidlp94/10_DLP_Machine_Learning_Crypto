@@ -2,6 +2,8 @@
 ## Introduction
 An application designed to apply machine learning (Unsupervised Learning) to historical data on cryptocurrencies to gather cluster data and form a cryptocurrency portfolio.
 
+Live application link: https://github.com/davidlp94/10_DLP_Machine_Learning_Crypto/blob/main/crypto_investments.ipynb
+
 ---
 
 ## Technologies
